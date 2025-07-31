@@ -39,21 +39,24 @@ void Canvas::Draw(int x, int y, unsigned int color)
 void Canvas::OutputFile(const char *file)
 {
     std::ofstream outputFile(file, std::ios::binary | std::ios::trunc);
-    if(outputFile.is_open() && !m_data.empty())
+    if(outputFile.is_open())
     {
-        auto doWrite = [](void *context, void *data, int size)
+        if(!m_data.empty())
         {
-            auto des = static_cast<std::vector<unsigned char>*>(context);
-            if(des != nullptr)
+            auto doWrite = [](void *context, void *data, int size)
             {
-                des->assign((unsigned char*)data, (unsigned char*)data + size);
+                auto des = static_cast<std::vector<unsigned char>*>(context);
+                if(des != nullptr)
+                {
+                    des->assign((unsigned char*)data, (unsigned char*)data + size);
+                }
+            };
+            std::vector<unsigned char> fileData;
+            stbi_write_png_to_func(doWrite, static_cast<void*>(&fileData), m_w, m_h, 4, static_cast<void*>(m_data.data()), 0);
+            if(!fileData.empty())
+            {
+                outputFile.write(reinterpret_cast<char*>(fileData.data()), fileData.size());
             }
-        };
-        std::vector<unsigned char> fileData;
-        stbi_write_png_to_func(doWrite, static_cast<void*>(&fileData), m_w, m_h, 4, static_cast<void*>(m_data.data()), 0);
-        if(!fileData.empty())
-        {
-            outputFile.write(reinterpret_cast<char*>(fileData.data()), fileData.size());
         }
         outputFile.close();
     }
